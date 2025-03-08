@@ -23,8 +23,9 @@ async fn main() {
     }
     let path = &args[1];
 
+    let check_time = std::env::var("INTERVAL").unwrap_or("30".to_string()).parse().unwrap_or(30);
     
-    let mut interval = tokio::time::interval(std::time::Duration::from_secs(10));
+    let mut interval = tokio::time::interval(std::time::Duration::from_secs(check_time));
     loop {
         let ctrlc = tokio::signal::ctrl_c();
         tokio::select! {
