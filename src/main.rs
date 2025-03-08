@@ -46,7 +46,13 @@ async fn ticked<P: AsRef<Path>>(path: P) {
             if std::fs::exists(format!("{}.mp4", basename)).unwrap() {
                 continue;
             }
+            let filelen = file.metadata().unwrap().len();
+            if filelen < 1000 {
+                println!("File is too small: {} {} bytes", file_path.display(), filelen);
+                continue;
+            }
             println!("Found a webp file: {} {} bytes", file_path.display(), file.metadata().unwrap().len());
+
             convert_webp_to_mp4(&file_path, &basename).await;
             if std::fs::exists(format!("{}.mp4", &basename)).unwrap() {
                 let file = std::fs::File::open(format!("{}.mp4", &basename)).unwrap();
