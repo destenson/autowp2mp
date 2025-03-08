@@ -68,7 +68,8 @@ async fn ticked<P: AsRef<Path>>(path: P) {
 
 #[derive(Debug)]
 pub enum Error {
-    Io(std::io::Error)
+    Io(std::io::Error),
+    WebpAnim(webp_animation::Error),
 }
 
 pub fn load_webp_file<P: AsRef<Path>>(path: P) -> Result<Vec<DynamicImage>, Error> {
@@ -78,22 +79,22 @@ pub fn load_webp_file<P: AsRef<Path>>(path: P) -> Result<Vec<DynamicImage>, Erro
     match webp::Decoder::new(&buf).decode() {
         Some(img) => Ok(vec![img.to_image()]),
         None => {
-            let decoder = Decoder::new(&buf).unwrap();
-        
-            Ok(decoder.into_iter().enumerate()
-                // .inspect(|(i, frame)| {
-                //     println!(
-                //         "Frame-{:03}, dimensions={:?}, data_len={}",
-                //         i,
-                //         frame.dimensions(),
-                //         frame.data().len()
-                //     );
-                // })
-                .filter_map(|(_, frame)| {
-                frame.into_image().ok()
-                })
-                .map(|x|DynamicImage::ImageRgba8(x))
-                .collect::<Vec<_>>())
+            Decoder::new(&buf).map(|decoder|{
+                decoder.into_iter().enumerate()
+                    // .inspect(|(i, frame)| {
+                    //     println!(
+                    //         "Frame-{:03}, dimensions={:?}, data_len={}",
+                    //         i,
+                    //         frame.dimensions(),
+                    //         frame.data().len()
+                    //     );
+                    // })
+                    .filter_map(|(_, frame)| {
+                    frame.into_image().ok()
+                    })
+                    .map(|x|DynamicImage::ImageRgba8(x))
+                    .collect::<Vec<_>>()
+            }).map_err(|e|Error::WebpAnim(e))
         }    
     }    
 }
